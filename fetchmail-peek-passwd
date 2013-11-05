@@ -1,0 +1,31 @@
+#!/usr/bin/python3
+
+# Copyright © 2013 Jakub Wilk <jwilk@jwilk.net>
+
+import argparse
+import os
+import subprocess as ipc
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument('server', metavar='SERVER')
+    ap.add_argument('user', metavar='USER', nargs='?')
+    options = ap.parse_args()
+    here = os.path.dirname(os.path.abspath(__file__))
+    fixed_env = dict(os.environ, FETCHMAILHOME=here)
+    output = ipc.check_output(['fetchmail', '--configdump'], env=fixed_env)
+    data = {}
+    exec(output, data)
+    data = data['fetchmailrc']
+    servers = data['servers']
+    for server in servers:
+        if server['pollname'] != options.server:
+            continue
+        for user in server['users']:
+            if (options.user is None) or (user['remote'] == options.user):
+                print(user['password'])
+
+if __name__ == '__main__':
+    main()
+
+# vim:ts=4 sw=4 et
