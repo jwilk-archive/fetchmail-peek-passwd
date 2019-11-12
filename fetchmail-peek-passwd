@@ -4,8 +4,33 @@
 # SPDX-License-Identifier: MIT
 
 import argparse
+import ast
 import os
 import subprocess
+
+class RewriteBooleans(ast.NodeTransformer):
+
+   def visit_Name(self, node):
+       if node.id == 'FALSE':
+           return ast.NameConstant(value=False)
+       elif node.id == 'TRUE':
+           return ast.NameConstant(value=True)
+       return node
+
+def parse_configdump(source):
+    module = ast.parse(source)
+    module = RewriteBooleans().visit(module)
+    if not isinstance(module, ast.Module):
+        raise RuntimeError
+    for item in module.body:
+        if not isinstance(item, ast.Assign):
+            continue
+        for target in item.targets:
+            if not isinstance(target, ast.Name):
+                continue
+            if target.id == 'fetchmailrc':
+                return ast.literal_eval(item.value)
+    raise RuntimeError
 
 def main():
     ap = argparse.ArgumentParser()
@@ -13,9 +38,7 @@ def main():
     ap.add_argument('user', metavar='USER', nargs='?')
     options = ap.parse_args()
     output = subprocess.check_output(['fetchmail', '--configdump'])
-    data = {}
-    exec(output, data)
-    data = data['fetchmailrc']
+    data = parse_configdump(output)
     servers = data['servers']
     for server in servers:
         if server['pollname'] != options.server:
