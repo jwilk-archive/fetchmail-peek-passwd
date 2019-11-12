@@ -11,9 +11,7 @@ def main():
     ap.add_argument('server', metavar='SERVER')
     ap.add_argument('user', metavar='USER', nargs='?')
     options = ap.parse_args()
-    here = os.path.dirname(os.path.abspath(__file__))
-    fixed_env = dict(os.environ, FETCHMAILHOME=here)
-    output = ipc.check_output(['fetchmail', '--configdump'], env=fixed_env)
+    output = ipc.check_output(['fetchmail', '--configdump'])
     data = {}
     exec(output, data)
     data = data['fetchmailrc']
