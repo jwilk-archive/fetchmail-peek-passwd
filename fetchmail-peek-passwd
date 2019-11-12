@@ -5,14 +5,14 @@
 
 import argparse
 import os
-import subprocess as ipc
+import subprocess
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('server', metavar='SERVER')
     ap.add_argument('user', metavar='USER', nargs='?')
     options = ap.parse_args()
-    output = ipc.check_output(['fetchmail', '--configdump'])
+    output = subprocess.check_output(['fetchmail', '--configdump'])
     data = {}
     exec(output, data)
     data = data['fetchmailrc']
